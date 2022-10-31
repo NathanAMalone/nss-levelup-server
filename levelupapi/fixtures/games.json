@@ -1,0 +1,26 @@
+[
+    {
+        "model": "levelupapi.game",
+        "pk": 1,
+        "fields": {
+            "game_type": 2,
+            "gamer": "1",
+            "title": "RPG Fever",
+            "maker": "LRG",
+            "number_of_players": 4,
+            "skill_level": 3
+        }
+    },
+    {
+        "model": "levelupapi.game",
+        "pk": 2,
+        "fields": {
+            "game_type": 3,
+            "gamer": "1",
+            "title": "MMO Everlasting",
+            "maker": "RD4",
+            "number_of_players": 8,
+            "skill_level": 10
+        }
+    }
+]
