@@ -4,10 +4,11 @@
         "pk": 1,
         "fields": {
             "game": 2,
-            "organizer": "1",
+            "organizer": 1,
             "description": "Come take care of your fever!",
             "date": "2022-11-12",
-            "time": "20:00"
+            "time": "20:00",
+            "gamers": [1]
         }
     },
     {
@@ -15,10 +16,11 @@
         "pk": 2,
         "fields": {
             "game": 1,
-            "organizer": "1",
+            "organizer": 1,
             "description": "It's going to be massive!",
             "date": "2022-11-10",
-            "time": "21:23"
+            "time": "21:23",
+            "gamers": [1]
         }
     }
 ]
