@@ -4,6 +4,7 @@ from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
 from rest_framework import serializers, status
 from levelupapi.models import Event, Game, Gamer
+from django.contrib.auth.models import User
 
 class EventView(ViewSet):
     """Level up game types view"""
@@ -74,10 +75,40 @@ class EventView(ViewSet):
 
         return Response(None, status=status.HTTP_204_NO_CONTENT)
 
+class UserSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = User
+        fields = ('username', 'first_name', 'last_name',)
+
+
+class OrganizerSerializer(serializers.ModelSerializer):
+    user = UserSerializer(many=False)
+
+    class Meta:
+        model = Gamer
+        fields = ('user', )
+
+class GamersSerializer(serializers.ModelSerializer):
+    user = UserSerializer(many=False)
+
+    class Meta:
+        model = Gamer
+        fields = ('user', )
+        
+class GameSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Game
+        fields = ('title', )
 
 class EventSerializer(serializers.ModelSerializer):
     """JSON serializer for game types
     """
+    organizer = OrganizerSerializer(many=False)
+    gamers = GamersSerializer(many=True)
+    game = GameSerializer(many=False)
+    
     class Meta:
         model = Event
         fields = ('id', 'game', 'organizer', 'description', 'date', 'time', 'gamers', )

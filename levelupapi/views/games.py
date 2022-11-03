@@ -4,6 +4,8 @@ from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
 from rest_framework import serializers, status
 from levelupapi.models import Game, Gamer, GameType
+from django.contrib.auth.models import User
+
 
 
 class GameView(ViewSet):
@@ -68,10 +70,31 @@ class GameView(ViewSet):
 
         return Response(None, status=status.HTTP_204_NO_CONTENT)
 
+class UserSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = User
+        fields = ('username', 'first_name', 'last_name',)
+
+class GameTypeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = GameType
+        fields = ('label', )
+
+class GamersSerializer(serializers.ModelSerializer):
+    user = UserSerializer(many=False)
+
+    class Meta:
+        model = Gamer
+        fields = ('user', )
 
 class GameSerializer(serializers.ModelSerializer):
     """JSON serializer for game types
     """
+    game_type = GameTypeSerializer(many=False)
+    gamer = GamersSerializer(many=False)
+
     class Meta:
         model = Game
         fields = ('id', 'game_type', 'gamer', 'title', 'maker', 'number_of_players', 'skill_level',)
