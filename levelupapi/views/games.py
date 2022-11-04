@@ -76,12 +76,6 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ('username', 'first_name', 'last_name',)
 
-class GameTypeSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = GameType
-        fields = ('label', )
-
 class GamersSerializer(serializers.ModelSerializer):
     user = UserSerializer(many=False)
 
@@ -92,7 +86,6 @@ class GamersSerializer(serializers.ModelSerializer):
 class GameSerializer(serializers.ModelSerializer):
     """JSON serializer for game types
     """
-    game_type = GameTypeSerializer(many=False)
     gamer = GamersSerializer(many=False)
 
     class Meta:
