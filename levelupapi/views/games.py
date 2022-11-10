@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework import serializers, status
 from levelupapi.models import Game, Gamer, GameType
 from django.contrib.auth.models import User
+from django.db.models import Count
 
 
 
@@ -17,9 +18,12 @@ class GameView(ViewSet):
         Returns:
             Response -- JSON serialized game type
         """
-        game = Game.objects.get(pk=pk)
-        serializer = GameSerializer(game)
-        return Response(serializer.data)
+        try:
+            game = Game.objects.get(pk=pk)
+            serializer = GameSerializer(game)
+            return Response(serializer.data)
+        except Game.DoesNotExist as ex:
+            return Response({'message': ex.args[0]}, status=status.HTTP_404_NOT_FOUND)
 
     def list(self, request):
         """Handle GET requests to get all game types
@@ -27,7 +31,12 @@ class GameView(ViewSet):
         Returns:
             Response -- JSON serialized list of game types
         """
-        games = Game.objects.all()
+        games = Game.objects.annotate(event_count=Count('events'))
+
+        game_type = request.query_params.get('type', None)
+        if game_type is not None:
+            games = games.filter(game_type_id=game_type)
+
         serializer = GameSerializer(games, many=True)
         return Response(serializer.data)
 
@@ -93,7 +102,10 @@ class GameSerializer(serializers.ModelSerializer):
     """JSON serializer for game types
     """
     gamer = GamersSerializer(many=False)
+    event_count = serializers.IntegerField(default=None)
 
     class Meta:
         model = Game
-        fields = ('id', 'game_type', 'gamer', 'title', 'maker', 'number_of_players', 'skill_level',)
+        fields = ('id', 'game_type', 'gamer', 'title', 'maker', 'number_of_players', 
+            'skill_level', 'event_count',)
+        depth = 1
