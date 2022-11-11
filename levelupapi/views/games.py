@@ -3,9 +3,10 @@ from django.http import HttpResponseServerError
 from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
 from rest_framework import serializers, status
-from levelupapi.models import Game, Gamer, GameType
+from levelupapi.models import Game, Gamer, GameType, Event, EventGamer
 from django.contrib.auth.models import User
-from django.db.models import Count
+from django.db.models import Count, Q
+from django.core.exceptions import ValidationError
 
 
 
@@ -31,7 +32,11 @@ class GameView(ViewSet):
         Returns:
             Response -- JSON serialized list of game types
         """
-        games = Game.objects.annotate(event_count=Count('events'))
+        event_gamers = EventGamer.objects.all()
+        # gamer = Gamer.objects.get(user=request.auth.user)
+        for event_gamer in event_gamers:
+            games = Game.objects.annotate(event_count=Count('events'),
+                user_event_count=Count('events', filter=Q(gamer=event_gamer.gamer)))
 
         game_type = request.query_params.get('type', None)
         if game_type is not None:
@@ -47,18 +52,22 @@ class GameView(ViewSet):
             Response -- JSON serialized game instance
         """
         gamer = Gamer.objects.get(user=request.auth.user)
-        game_type = GameType.objects.get(pk=request.data["game_type"])
+        # game_type = GameType.objects.get(pk=request.data["game_type"])
 
-        game = Game.objects.create(
-            title=request.data["title"],
-            maker=request.data["maker"],
-            number_of_players=request.data["number_of_players"],
-            skill_level=request.data["skill_level"],
-            gamer=gamer,
-            game_type=game_type
-        )
-        serializer = GameSerializer(game)
-        return Response(serializer.data)
+        # game = Game.objects.create(
+        #     title=request.data["title"],
+        #     maker=request.data["maker"],
+        #     number_of_players=request.data["number_of_players"],
+        #     skill_level=request.data["skill_level"],
+        #     gamer=gamer,
+        #     game_type=game_type
+        # )
+        # serializer = GameSerializer(game)
+        serializer = CreateGameSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(gamer=gamer)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def update(self, request, pk):
         """Handle PUT requests for a game
@@ -98,14 +107,21 @@ class GamersSerializer(serializers.ModelSerializer):
         model = Gamer
         fields = ('user', )
 
+class CreateGameSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Game
+        fields = ['id', 'title', 'maker', 'number_of_players', 'skill_level', 'game_type']
+
 class GameSerializer(serializers.ModelSerializer):
     """JSON serializer for game types
     """
     gamer = GamersSerializer(many=False)
     event_count = serializers.IntegerField(default=None)
+    user_event_count = serializers.IntegerField(default=None)
 
     class Meta:
         model = Game
         fields = ('id', 'game_type', 'gamer', 'title', 'maker', 'number_of_players', 
-            'skill_level', 'event_count',)
+            'skill_level', 'event_count', 'user_event_count')
         depth = 1
